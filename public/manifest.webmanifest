@@ -1,0 +1,19 @@
+{
+  "name": "JUST FARM",
+  "short_name": "JUST FARM",
+  "description": "Game edukasi pertanian pixel-art Desa Bandungrejo.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#17231b",
+  "theme_color": "#17231b",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "32x32",
+      "type": "image/x-icon",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,602 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design system definition.
+ *
+ * The @theme inline block maps CSS custom properties to Tailwind utility
+ * classes (e.g. --color-primary -> bg-primary, text-primary).
+ *
+ * The :root and .dark blocks define the actual color values using oklch.
+ * All colors MUST use oklch format.
+ *
+ * To add a new semantic color:
+ * 1. Add the variable to :root (light value) and .dark (dark value)
+ * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.129 0.042 264.695);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.129 0.042 264.695);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.129 0.042 264.695);
+  --primary: oklch(0.208 0.042 265.755);
+  --primary-foreground: oklch(0.984 0.003 247.858);
+  --secondary: oklch(0.968 0.007 247.896);
+  --secondary-foreground: oklch(0.208 0.042 265.755);
+  --muted: oklch(0.968 0.007 247.896);
+  --muted-foreground: oklch(0.554 0.046 257.417);
+  --accent: oklch(0.968 0.007 247.896);
+  --accent-foreground: oklch(0.208 0.042 265.755);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.984 0.003 247.858);
+  --border: oklch(0.929 0.013 255.508);
+  --input: oklch(0.929 0.013 255.508);
+  --ring: oklch(0.704 0.04 256.788);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.984 0.003 247.858);
+  --sidebar-foreground: oklch(0.129 0.042 264.695);
+  --sidebar-primary: oklch(0.208 0.042 265.755);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.968 0.007 247.896);
+  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
+  --sidebar-border: oklch(0.929 0.013 255.508);
+  --sidebar-ring: oklch(0.704 0.04 256.788);
+}
+
+.dark {
+  --background: oklch(0.129 0.042 264.695);
+  --foreground: oklch(0.984 0.003 247.858);
+  --card: oklch(0.208 0.042 265.755);
+  --card-foreground: oklch(0.984 0.003 247.858);
+  --popover: oklch(0.208 0.042 265.755);
+  --popover-foreground: oklch(0.984 0.003 247.858);
+  --primary: oklch(0.929 0.013 255.508);
+  --primary-foreground: oklch(0.208 0.042 265.755);
+  --secondary: oklch(0.279 0.041 260.031);
+  --secondary-foreground: oklch(0.984 0.003 247.858);
+  --muted: oklch(0.279 0.041 260.031);
+  --muted-foreground: oklch(0.704 0.04 256.788);
+  --accent: oklch(0.279 0.041 260.031);
+  --accent-foreground: oklch(0.984 0.003 247.858);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.984 0.003 247.858);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.551 0.027 264.364);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.208 0.042 265.755);
+  --sidebar-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.279 0.041 260.031);
+  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.551 0.027 264.364);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* JUST FARM — village pixel design system                             */
+/* ------------------------------------------------------------------ */
+
+@theme inline {
+  --color-parchment: var(--parchment);
+  --color-wood: var(--wood);
+  --color-wood-dark: var(--wood-dark);
+  --color-gold: var(--gold);
+  --color-leaf: var(--leaf);
+  --color-leaf-light: var(--leaf-light);
+  --color-clay: var(--clay);
+  --color-clay-light: var(--clay-light);
+  --color-night: var(--night);
+  --font-pixel: "Press Start 2P", monospace;
+  --font-body: "VT323", monospace;
+}
+
+:root {
+  --parchment: oklch(0.94 0.035 88);
+  --wood: oklch(0.42 0.05 62);
+  --wood-dark: oklch(0.28 0.045 58);
+  --gold: oklch(0.83 0.14 84);
+  --leaf: oklch(0.62 0.14 145);
+  --leaf-light: oklch(0.83 0.15 138);
+  --clay: oklch(0.55 0.15 32);
+  --clay-light: oklch(0.78 0.13 38);
+  --night: oklch(0.18 0.03 250);
+}
+
+@layer components {
+  .panel {
+    background:
+      linear-gradient(180deg, oklch(0.34 0.045 60) 0%, oklch(0.27 0.04 58) 100%);
+    border: 4px solid var(--wood-dark);
+    box-shadow:
+      inset 0 0 0 3px oklch(0.5 0.06 66),
+      inset 0 0 0 6px oklch(0.24 0.035 56),
+      6px 6px 0 0 oklch(0.14 0.02 55 / 55%);
+    image-rendering: pixelated;
+  }
+
+  .panel-inset {
+    background: oklch(0.24 0.035 58 / 85%);
+    border: 3px solid oklch(0.45 0.055 64);
+    box-shadow: inset 2px 2px 0 oklch(0.18 0.03 55);
+  }
+
+  .btn-pixel {
+    font-family: var(--font-body);
+    font-size: 1.35rem;
+    line-height: 1;
+    padding: 0.55rem 1.1rem;
+    color: var(--parchment);
+    background: linear-gradient(180deg, oklch(0.5 0.07 66), oklch(0.37 0.055 62));
+    border: 3px solid var(--wood-dark);
+    box-shadow: inset 0 3px 0 oklch(0.62 0.07 70), 3px 3px 0 oklch(0.15 0.02 55 / 60%);
+    transition: transform 80ms steps(2), filter 120ms;
+  }
+  .btn-pixel:hover:not(:disabled) {
+    filter: brightness(1.15);
+  }
+  .btn-pixel:active:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: inset 0 3px 0 oklch(0.45 0.06 66);
+  }
+  .btn-pixel:disabled {
+    opacity: 0.45;
+  }
+  .btn-pixel-active {
+    background: linear-gradient(180deg, var(--gold), oklch(0.66 0.13 78));
+    color: oklch(0.2 0.03 55);
+  }
+
+  .slot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: oklch(0.26 0.035 58 / 90%);
+    border: 3px solid oklch(0.44 0.055 64);
+    box-shadow: inset 2px 2px 0 oklch(0.18 0.03 55);
+  }
+  .slot-active {
+    border-color: var(--gold);
+    box-shadow: inset 0 0 0 2px var(--gold), 0 0 14px oklch(0.83 0.14 84 / 45%);
+  }
+
+  .window-in {
+    animation: window-pop 160ms steps(4) both;
+  }
+
+  /* ---------- Layar judul ---------- */
+  .title-logo {
+    font-family: var(--font-pixel);
+    color: oklch(0.99 0 0);
+    letter-spacing: 0.04em;
+    -webkit-text-stroke: 10px oklch(0.12 0.02 55);
+    paint-order: stroke fill;
+    text-shadow:
+      0 10px 0 oklch(0.12 0.02 55),
+      0 14px 0 oklch(0.12 0.02 55 / 45%);
+  }
+
+  .title-btn {
+    font-family: var(--font-pixel);
+    font-size: 1.45rem;
+    line-height: 1;
+    padding: 1.05rem 1rem;
+    color: oklch(0.99 0 0);
+    text-shadow: 3px 3px 0 oklch(0.2 0.05 250);
+    background: linear-gradient(180deg, oklch(0.76 0.06 240), oklch(0.6 0.09 245));
+    border: 5px solid oklch(0.24 0.05 250);
+    box-shadow:
+      inset 0 0 0 4px oklch(0.86 0.05 235),
+      inset 0 -8px 0 oklch(0.48 0.09 248),
+      5px 6px 0 oklch(0.12 0.02 55 / 65%);
+    transition: transform 80ms steps(2), filter 120ms;
+    image-rendering: pixelated;
+  }
+  .title-btn:hover {
+    filter: brightness(1.12);
+    transform: translateY(-2px);
+  }
+  .title-btn:active {
+    transform: translate(3px, 4px);
+    box-shadow:
+      inset 0 0 0 4px oklch(0.86 0.05 235),
+      inset 0 -4px 0 oklch(0.48 0.09 248);
+  }
+
+  .title-vignette {
+    background: radial-gradient(
+      ellipse at 50% 45%,
+      transparent 35%,
+      oklch(0.14 0.02 55 / 55%) 100%
+    );
+  }
+
+  /* The gameplay stage is aspect-matched on phones. The title screen needs
+     its own width-aware typography so the logo is never cropped in portrait. */
+  .mobile-mode .title-screen-content {
+    padding-top: max(28px, calc(env(safe-area-inset-top) + 22px));
+    padding-right: max(16px, env(safe-area-inset-right));
+    padding-left: max(16px, env(safe-area-inset-left));
+  }
+
+  .mobile-mode .title-logo {
+    max-width: 100%;
+    /* 68px leaves room for the pixel stroke and safe-area padding on
+       360–412px portrait devices after the logical stage is scaled. */
+    font-size: min(68px, 18vw) !important;
+    text-align: center;
+    -webkit-text-stroke: min(8px, 1.7vw);
+  }
+
+  .mobile-mode .title-subtitle-primary {
+    max-width: 100%;
+    margin-top: clamp(18px, 3vh, 32px);
+    font-size: min(18px, 4.2vw);
+    line-height: 1.35;
+    text-align: center;
+  }
+
+  .mobile-mode .title-subtitle-secondary {
+    max-width: 100%;
+    margin-top: 10px;
+    font-size: min(24px, 5vw);
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  .mobile-mode .title-menu {
+    width: min(520px, calc(100% - 8px));
+    margin-top: clamp(28px, 6vh, 58px);
+    gap: clamp(14px, 2.5vh, 24px);
+  }
+
+  .mobile-mode .title-btn {
+    min-height: 56px;
+    padding: 0.82rem 0.7rem;
+    font-size: min(1.45rem, 5.5vw);
+  }
+
+  .mobile-mode .title-description {
+    width: min(900px, calc(100% - 8px));
+    margin-top: clamp(24px, 4vh, 42px);
+    font-size: min(24px, 4.5vw);
+    line-height: 1.25;
+  }
+
+  .mobile-mode .title-copyright {
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+    left: max(12px, env(safe-area-inset-left));
+    font-size: min(24px, 4.5vw);
+    text-align: center;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Touch controls                                                     */
+/* ------------------------------------------------------------------ */
+
+.mobile-mode {
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+.game-shell.mobile-mode {
+  width: 100dvw;
+  height: 100dvh;
+  min-width: 100dvw;
+  min-height: 100dvh;
+}
+
+.mobile-mode .desktop-key-hint {
+  display: none !important;
+}
+
+/* Large game windows stay inside the mobile logical stage and scroll within
+   their content area instead of expanding behind browser chrome. */
+.mobile-mode .mobile-window {
+  padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right))
+    max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+}
+
+.mobile-mode .mobile-window-panel {
+  width: calc(100% - 8px) !important;
+  max-width: 100%;
+  max-height: calc(100% - 8px);
+  padding: clamp(12px, 3vw, 28px);
+}
+
+.mobile-mode .mobile-window-panel > div:first-child {
+  flex: 0 0 auto;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+}
+
+.mobile-mode .mobile-window-panel > div:last-child {
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-mode .mobile-window-panel .grid-cols-\[300px_1fr\],
+.mobile-mode .mobile-window-panel .grid-cols-\[280px_1fr\] {
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 12px;
+}
+
+.mobile-mode .mobile-window-panel .grid-cols-6 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mobile-mode .mobile-guide {
+  padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right))
+    max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+}
+
+.mobile-mode .mobile-guide-panel {
+  width: 100% !important;
+  max-width: 100%;
+  max-height: 100%;
+  padding: 14px;
+}
+
+.mobile-mode .mobile-guide-panel > div:last-child {
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-mode .mobile-guide-panel .grid-cols-2 {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.mobile-controls {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+}
+
+.mobile-status {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top));
+  left: calc(12px + env(safe-area-inset-left));
+  width: min(48vw, 300px);
+  padding: 8px 10px;
+  border: 3px solid var(--wood-dark);
+  background: linear-gradient(180deg, oklch(0.34 0.045 60 / 94%), oklch(0.25 0.04 58 / 94%));
+  box-shadow: inset 0 0 0 2px oklch(0.5 0.06 66), 3px 3px 0 oklch(0.14 0.02 55 / 55%);
+  color: var(--parchment);
+  font-family: var(--font-body);
+  font-size: clamp(1rem, 3.8vw, 1.35rem);
+  line-height: 1.05;
+  pointer-events: none;
+}
+
+.mobile-status-title {
+  color: var(--gold);
+  font-family: var(--font-pixel);
+  font-size: clamp(0.48rem, 1.9vw, 0.7rem);
+  line-height: 1.35;
+}
+
+.mobile-status-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 9px;
+  margin-top: 4px;
+  color: var(--parchment);
+}
+
+.mobile-status-quest {
+  overflow: hidden;
+  margin-top: 4px;
+  color: oklch(0.82 0.1 138);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-status-harvest {
+  overflow: hidden;
+  margin-top: 3px;
+  color: oklch(0.78 0.06 70);
+  font-size: 0.85em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-joystick {
+  position: fixed;
+  left: calc(16px + env(safe-area-inset-left));
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  width: clamp(118px, 28vw, 172px);
+  height: clamp(118px, 28vw, 172px);
+  border: 4px solid oklch(0.22 0.04 58 / 82%);
+  border-radius: 999px;
+  background: oklch(0.3 0.06 62 / 66%);
+  box-shadow: inset 0 0 0 5px oklch(0.58 0.08 70 / 35%), 5px 5px 0 oklch(0.1 0.02 55 / 45%);
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.mobile-joystick-ring {
+  position: absolute;
+  inset: 19%;
+  border: 3px dashed oklch(0.8 0.12 85 / 42%);
+  border-radius: 999px;
+}
+
+.mobile-joystick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 38%;
+  height: 38%;
+  border: 4px solid var(--wood-dark);
+  border-radius: 999px;
+  background: linear-gradient(145deg, oklch(0.78 0.12 84), oklch(0.55 0.08 65));
+  box-shadow: inset 0 3px 0 oklch(0.9 0.12 88 / 55%), 3px 3px 0 oklch(0.12 0.02 55 / 55%);
+  pointer-events: none;
+}
+
+.mobile-top-controls {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top));
+  right: calc(12px + env(safe-area-inset-right));
+  display: flex;
+  max-width: min(72vw, 620px);
+  flex-wrap: wrap;
+  gap: 7px;
+  justify-content: flex-end;
+  pointer-events: auto;
+}
+
+.mobile-action-button {
+  min-width: 58px;
+  min-height: 50px;
+  padding: 0.45rem 0.7rem;
+  font-size: 1.2rem;
+  touch-action: manipulation;
+}
+
+.mobile-context-controls {
+  position: fixed;
+  right: calc(16px + env(safe-area-inset-right));
+  bottom: calc(112px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.mobile-context-controls .mobile-action-button {
+  min-width: 112px;
+  min-height: 58px;
+  font-size: 1.45rem;
+}
+
+.mobile-tool-controls {
+  position: fixed;
+  left: 50%;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  display: flex;
+  gap: 6px;
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
+
+.mobile-tool-button {
+  display: flex;
+  width: clamp(44px, 12vw, 58px);
+  height: clamp(44px, 12vw, 58px);
+  align-items: center;
+  justify-content: center;
+  border: 3px solid oklch(0.44 0.055 64);
+  background: oklch(0.26 0.035 58 / 94%);
+  box-shadow: 3px 3px 0 oklch(0.12 0.02 55 / 55%);
+  touch-action: manipulation;
+}
+
+.mobile-tool-button.active {
+  border-color: var(--gold);
+  background: oklch(0.5 0.09 68 / 95%);
+}
+
+@media (orientation: portrait) {
+  .mobile-context-controls {
+    bottom: calc(132px + env(safe-area-inset-bottom));
+  }
+
+  .mobile-tool-controls {
+    bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+}
+
+
+@keyframes window-pop {
+  0% {
+    transform: scale(0.88);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
