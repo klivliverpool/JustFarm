@@ -59,7 +59,6 @@ function Index() {
     if (!canvas) return;
     const game = new Game(canvas);
     gameRef.current = game;
-    (window as unknown as { __game?: Game }).__game = game;
     game.onChange = (s) => setSnap(s);
     game.emit(true);
     game.start();
