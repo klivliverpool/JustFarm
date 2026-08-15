@@ -4,6 +4,7 @@ import { Game, VIEW_H, VIEW_W, type Snapshot, type ToolId } from "@/game/game";
 import { HUD } from "@/components/game/HUD";
 import { Overlays } from "@/components/game/Overlays";
 import { MobileControls } from "@/components/game/MobileControls";
+import { preloadPestAssets } from "@/game/pestAssets";
 
 type ControlMode = "desktop" | "mobile";
 
@@ -57,6 +58,7 @@ function Index() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    preloadPestAssets();
     const game = new Game(canvas);
     gameRef.current = game;
     game.onChange = (s) => setSnap(s);

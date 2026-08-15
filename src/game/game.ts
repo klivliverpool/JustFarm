@@ -1623,7 +1623,7 @@ export class Game {
     const plot = this.plotInFront();
     const { cx, cy } = this.facingTile();
     if (npc) {
-      this.prompt = `E — Bicara dengan ${npc.name} (${npc.role})`;
+      this.prompt = `E ��� Bicara dengan ${npc.name} (${npc.role})`;
       this.contextAction = "interact";
     } else if (b && b.action !== "none") {
       this.prompt = `E — Masuk ${b.name}`;
@@ -2314,7 +2314,7 @@ export class Game {
           if (c.pest) {
             const f = Math.floor(performance.now() / 260) % 2;
             const bobY = Math.sin(performance.now() / 260) * 2;
-            ctx.drawImage(pestSprite(c.pest, f), p.tx * TILE + 4, p.ty * TILE - 18 + bobY);
+            ctx.drawImage(pestSprite(c.pest, f, 2), p.tx * TILE - 4, p.ty * TILE - 26 + bobY);
             // alert bubble
             ctx.fillStyle = "#ffdf6b";
             ctx.fillRect(p.tx * TILE + 7, p.ty * TILE - 30, 3, 6);
