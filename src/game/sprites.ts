@@ -5,6 +5,7 @@
  */
 import { Painter, cached, mulberry32, shade } from "./pixel";
 import { CROPS, PESTS, type CropId, type PestId } from "./data";
+import { getPestImage } from "./pestAssets";
 
 export const TILE = 16;
 
@@ -795,10 +796,8 @@ export function cropSprite(id: CropId, stage: number, sick: boolean): HTMLCanvas
 /* Pests                                                               */
 /* ------------------------------------------------------------------ */
 
-export function pestSprite(id: PestId, frame: number, scale = 1): HTMLCanvasElement {
-  return cached(`pest${id}${frame}${scale}`, () => {
-    const s = scale;
-    const p = new Painter(16 * s, 16 * s);
+function drawProceduralPest(id: PestId, frame: number): HTMLCanvasElement {
+  return cached(`pestproc${id}${frame}`, () => {
     const d = PESTS[id];
     const draw = new Painter(16, 16);
     const wob = frame % 2;
@@ -844,10 +843,34 @@ export function pestSprite(id: PestId, frame: number, scale = 1): HTMLCanvasElem
         break;
       }
     }
-    if (s === 1) return draw.canvas;
-    // nearest-neighbour upscale for encyclopedia portraits
+    return draw.canvas;
+  });
+}
+
+function drawPestImage(img: HTMLImageElement, scale: number): HTMLCanvasElement {
+  const n = 16 * scale;
+  const p = new Painter(n, n);
+  p.ctx.imageSmoothingEnabled = false;
+  const ratio = Math.min(n / img.width, n / img.height);
+  const w = img.width * ratio;
+  const h = img.height * ratio;
+  const dx = (n - w) / 2;
+  const dy = (n - h) / 2;
+  p.ctx.drawImage(img, dx, dy, w, h);
+  return p.canvas;
+}
+
+export function pestSprite(id: PestId, frame: number, scale = 1): HTMLCanvasElement {
+  const img = getPestImage(id);
+  if (img) {
+    return cached(`pestart${id}${scale}`, () => drawPestImage(img, scale));
+  }
+  const draw = drawProceduralPest(id, frame);
+  if (scale === 1) return draw;
+  return cached(`pestproc${id}${frame}${scale}`, () => {
+    const p = new Painter(16 * scale, 16 * scale);
     p.ctx.imageSmoothingEnabled = false;
-    p.ctx.drawImage(draw.canvas, 0, 0, 16 * s, 16 * s);
+    p.ctx.drawImage(draw, 0, 0, 16 * scale, 16 * scale);
     return p.canvas;
   });
 }

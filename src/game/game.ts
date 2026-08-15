@@ -8,12 +8,17 @@ import {
   CROP_IDS,
   PESTS,
   PEST_IDS,
+  PEST_QUESTIONS,
   PESTICIDES,
   QUESTS,
+  MANAGEMENT_OPTIONS,
+  MANAGEMENT_CORRECT_INDEX,
+  MANAGEMENT_EXPLANATIONS,
   WIN_COINS,
   WIN_TARGETS,
   type CropId,
   type PestId,
+  type PestQuestion,
   type PesticideId,
   type QuestId,
   type Weather,
@@ -177,12 +182,22 @@ export interface Snapshot {
   dialogue: { name: string; role: string; line: string; index: number; total: number } | null;
   shop: { title: string; entries: ShopEntry[] } | null;
   diagnosis: {
+    stage: "diagnose" | "question" | "management" | "done";
     cropName: string;
     symptoms: string[];
     options: PestId[];
     revealed: PestId | null;
     correct: boolean | null;
     explain: string;
+    question: { category: string; text: string; options: string[] } | null;
+    questionAnswered: number | null;
+    questionCorrect: boolean | null;
+    questionExplain: string;
+    managementOptions: string[];
+    managementChoiceIndex: number | null;
+    managementCorrect: boolean | null;
+    managementExplain: string;
+    reward: number | null;
   } | null;
   discovered: PestId[];
   harvested: Record<CropId, number>;
@@ -267,7 +282,8 @@ const NPC_DEFS: {
       "Saya petugas penyuluh pertanian kecamatan Bantur.",
       "Setiap tanaman sakit menunjukkan gejala: warna, bentuk, lubang, serangga.",
       "Baca gejalanya, sebut namanya, lalu pilih pestisida yang sesuai.",
-      "Buka Ensiklopedia (K) — setiap hama yang kamu diagnosis tercatat di sana.",
+      "Setelah diagnosis benar, jawab juga pertanyaan lanjutannya sebelum mengobati — supaya kamu paham alasannya, bukan cuma menebak.",
+      "Buka Ensiklopedia (K) — setiap hama yang kamu pelajari tuntas tercatat di sana.",
     ],
   },
   {
@@ -395,12 +411,21 @@ export class Game {
   private dialogue: { npc: NPC; index: number } | null = null;
   private shop: { title: string; entries: ShopEntry[] } | null = null;
   private diagnosis: {
+    stage: "diagnose" | "question" | "management" | "done";
     plot: Plot;
+    pest: PestId;
     options: PestId[];
     revealed: PestId | null;
     correct: boolean | null;
     explain: string;
+    question: PestQuestion | null;
+    questionAnswered: number | null;
+    questionCorrect: boolean | null;
+    managementChoiceIndex: number | null;
+    managementCorrect: boolean | null;
+    reward: number | null;
   } | null = null;
+  private lastQuestionByPest = new Map<PestId, string>();
   private toasts: { id: number; text: string; tone: "good" | "bad" | "info"; t: number }[] = [];
   private floaters: { x: number; y: number; text: string; t: number; color: string }[] = [];
   private rainDrops: { x: number; y: number; v: number }[] = [];
@@ -579,6 +604,7 @@ export class Game {
     this.dialogue = null;
     this.shop = null;
     this.diagnosis = null;
+    this.lastQuestionByPest.clear();
     this.toasts = [];
     this.floaters = [];
     this.particles = [];
@@ -1325,9 +1351,7 @@ export class Game {
 
   /* ---------------- diagnosis ---------------- */
 
-  private openDiagnosis(plot: Plot) {
-    const pest = plot.crop?.pest;
-    if (!pest) return;
+  private rollDiagnosisOptions(pest: PestId): PestId[] {
     const others = PEST_IDS.filter((p) => p !== pest);
     // Fisher-Yates on the distractors, then insert the answer randomly
     for (let i = others.length - 1; i > 0; i--) {
@@ -1338,30 +1362,139 @@ export class Game {
     }
     const options = others.slice(0, 3);
     options.splice(Math.floor(Math.random() * 4), 0, pest);
-    this.diagnosis = { plot, options, revealed: null, correct: null, explain: "" };
+    return options;
+  }
+
+  private openDiagnosis(plot: Plot) {
+    const pest = plot.crop?.pest;
+    if (!pest) return;
+    this.diagnosis = {
+      stage: "diagnose",
+      plot,
+      pest,
+      options: this.rollDiagnosisOptions(pest),
+      revealed: null,
+      correct: null,
+      explain: "",
+      question: null,
+      questionAnswered: null,
+      questionCorrect: null,
+      managementChoiceIndex: null,
+      managementCorrect: null,
+      reward: null,
+    };
     this.overlay = "diagnosis";
     this.audio.pest();
     this.emit(true);
   }
 
+  /** Called from the UI when a wrong diagnosis is revealed, to try again on the same pest. */
+  retryDiagnosis() {
+    const d = this.diagnosis;
+    if (!d || d.stage !== "diagnose" || !d.revealed) return;
+    d.options = this.rollDiagnosisOptions(d.pest);
+    d.revealed = null;
+    d.correct = null;
+    d.explain = "";
+    this.emit(true);
+  }
+
   answerDiagnosis(choice: PestId) {
     const d = this.diagnosis;
-    if (!d || d.revealed) return;
-    const pest = d.plot.crop?.pest;
-    if (!pest) return;
+    if (!d || d.stage !== "diagnose" || d.revealed) return;
+    const pest = d.pest;
     d.revealed = pest;
     if (choice === pest) {
       d.correct = true;
-      d.explain = `Benar! ${PESTS[pest].name} (${PESTS[pest].nameId}). ${PESTS[pest].info} Pengobatan: ${PESTICIDES[PESTS[pest].cure].name}.`;
-      this.curePest(d.plot, pest, 50);
+      d.explain = `Benar! ${PESTS[pest].name} (${PESTS[pest].nameId}). ${PESTS[pest].info}`;
     } else {
       d.correct = false;
       d.explain = `Belum tepat. ${PESTS[choice].name} menyebabkan ${PESTS[choice].symptoms[0]?.toLowerCase()} pada ${PESTS[choice].hosts.map((h) => CROPS[h].name).join(", ")}. Di sini pelaku sebenarnya adalah ${PESTS[pest].name} — ${PESTS[pest].info}`;
       if (d.plot.crop) d.plot.crop.health = Math.max(5, d.plot.crop.health - 20);
       this.addMoney(-25, false);
-      this.discovered.add(pest);
       this.audio.wrong();
     }
+    this.emit(true);
+  }
+
+  /** Called from the UI after a correct diagnosis, to move on to the follow-up question. */
+  advanceToQuestion() {
+    const d = this.diagnosis;
+    if (!d || d.stage !== "diagnose" || !d.correct) return;
+    const candidates = PEST_QUESTIONS.filter((q) => q.pestId === d.pest);
+    const cropId = d.plot.crop?.id;
+    const preferred = cropId ? candidates.filter((q) => q.cropIds.includes(cropId)) : candidates;
+    const pool = preferred.length > 0 ? preferred : candidates;
+    const lastId = this.lastQuestionByPest.get(d.pest);
+    const fresh = pool.filter((q) => q.id !== lastId);
+    const options = fresh.length > 0 ? fresh : pool;
+    const question = options[Math.floor(Math.random() * options.length)] ?? null;
+    if (question) this.lastQuestionByPest.set(d.pest, question.id);
+    d.stage = "question";
+    d.question = question;
+    d.questionAnswered = null;
+    d.questionCorrect = null;
+    this.audio.click();
+    this.emit(true);
+  }
+
+  answerQuestion(index: number) {
+    const d = this.diagnosis;
+    if (!d || d.stage !== "question" || !d.question || d.questionAnswered !== null) return;
+    d.questionAnswered = index;
+    d.questionCorrect = index === d.question.correctIndex;
+    if (d.questionCorrect) this.audio.success();
+    else this.audio.wrong();
+    this.emit(true);
+  }
+
+  /** Called from the UI when a follow-up question was answered wrong, to try it again. */
+  retryQuestion() {
+    const d = this.diagnosis;
+    if (!d || d.stage !== "question") return;
+    d.questionAnswered = null;
+    d.questionCorrect = null;
+    this.emit(true);
+  }
+
+  /** Called from the UI once the follow-up question is answered correctly. */
+  advanceToManagement() {
+    const d = this.diagnosis;
+    if (!d || d.stage !== "question" || !d.questionCorrect) return;
+    d.stage = "management";
+    d.managementChoiceIndex = null;
+    d.managementCorrect = null;
+    this.audio.click();
+    this.emit(true);
+  }
+
+  answerManagement(index: number) {
+    const d = this.diagnosis;
+    if (!d || d.stage !== "management" || d.managementChoiceIndex !== null) return;
+    d.managementChoiceIndex = index;
+    d.managementCorrect = index === MANAGEMENT_CORRECT_INDEX;
+    if (d.managementCorrect) this.audio.success();
+    else this.audio.wrong();
+    this.emit(true);
+  }
+
+  /** Called from the UI when a wrong management choice was made, to try it again. */
+  retryManagement() {
+    const d = this.diagnosis;
+    if (!d || d.stage !== "management") return;
+    d.managementChoiceIndex = null;
+    d.managementCorrect = null;
+    this.emit(true);
+  }
+
+  /** Called from the UI once management is answered correctly — treats the plant and closes the lesson. */
+  finishPestLesson() {
+    const d = this.diagnosis;
+    if (!d || d.stage !== "management" || !d.managementCorrect) return;
+    const reward = 50;
+    this.curePest(d.plot, d.pest, reward);
+    d.stage = "done";
+    d.reward = reward;
     this.emit(true);
   }
 
@@ -1490,7 +1623,7 @@ export class Game {
     const plot = this.plotInFront();
     const { cx, cy } = this.facingTile();
     if (npc) {
-      this.prompt = `E — Bicara dengan ${npc.name} (${npc.role})`;
+      this.prompt = `E ��� Bicara dengan ${npc.name} (${npc.role})`;
       this.contextAction = "interact";
     } else if (b && b.action !== "none") {
       this.prompt = `E — Masuk ${b.name}`;
@@ -2181,7 +2314,7 @@ export class Game {
           if (c.pest) {
             const f = Math.floor(performance.now() / 260) % 2;
             const bobY = Math.sin(performance.now() / 260) * 2;
-            ctx.drawImage(pestSprite(c.pest, f), p.tx * TILE + 4, p.ty * TILE - 18 + bobY);
+            ctx.drawImage(pestSprite(c.pest, f, 2), p.tx * TILE - 4, p.ty * TILE - 26 + bobY);
             // alert bubble
             ctx.fillStyle = "#ffdf6b";
             ctx.fillRect(p.tx * TILE + 7, p.ty * TILE - 30, 3, 6);
@@ -2975,12 +3108,32 @@ export class Game {
       shop: this.shop,
       diagnosis: this.diagnosis
         ? {
+            stage: this.diagnosis.stage,
             cropName: this.diagnosis.plot.crop ? CROPS[this.diagnosis.plot.crop.id].name : "",
-            symptoms: this.diagnosis.plot.crop?.pest ? PESTS[this.diagnosis.plot.crop.pest].symptoms : [],
+            symptoms: PESTS[this.diagnosis.pest].symptoms,
             options: this.diagnosis.options,
             revealed: this.diagnosis.revealed,
             correct: this.diagnosis.correct,
             explain: this.diagnosis.explain,
+            question: this.diagnosis.question
+              ? {
+                  category: this.diagnosis.question.category,
+                  text: this.diagnosis.question.question,
+                  options: this.diagnosis.question.options,
+                }
+              : null,
+            questionAnswered: this.diagnosis.questionAnswered,
+            questionCorrect: this.diagnosis.questionCorrect,
+            questionExplain:
+              this.diagnosis.question && this.diagnosis.questionAnswered !== null ? this.diagnosis.question.explanation : "",
+            managementOptions: MANAGEMENT_OPTIONS,
+            managementChoiceIndex: this.diagnosis.managementChoiceIndex,
+            managementCorrect: this.diagnosis.managementCorrect,
+            managementExplain:
+              this.diagnosis.managementChoiceIndex !== null
+                ? MANAGEMENT_EXPLANATIONS[this.diagnosis.managementChoiceIndex] ?? ""
+                : "",
+            reward: this.diagnosis.reward,
           }
         : null,
       discovered: Array.from(this.discovered),

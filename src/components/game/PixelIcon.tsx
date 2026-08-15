@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { subscribePestAssets } from "@/game/pestAssets";
 
 /**
  * Renders a procedurally generated pixel-art canvas at an integer upscale
@@ -14,6 +15,14 @@ export function PixelIcon({
   className?: string;
 }) {
   const ref = useRef<HTMLCanvasElement | null>(null);
+  const [assetTick, setAssetTick] = useState(0);
+
+  // Redraw once real pest artwork finishes loading, so any icon rendered
+  // before that (diagnosis, encyclopedia, etc.) swaps from the procedural
+  // placeholder to the actual PNG without needing a page reload.
+  useEffect(() => {
+    return subscribePestAssets(() => setAssetTick((t) => t + 1));
+  }, []);
 
   useEffect(() => {
     const dest = ref.current;
@@ -26,7 +35,7 @@ export function PixelIcon({
     ctx.imageSmoothingEnabled = false;
     ctx.clearRect(0, 0, dest.width, dest.height);
     ctx.drawImage(src, 0, 0);
-  }, [make]);
+  }, [make, assetTick]);
 
   return (
     <canvas

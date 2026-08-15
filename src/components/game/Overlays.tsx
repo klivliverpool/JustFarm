@@ -24,6 +24,16 @@ import {
   type PestId,
   type PesticideId,
 } from "@/game/data";
+
+const CATEGORY_LABELS: Record<string, string> = {
+  symptom: "GEJALA",
+  biology: "BIOLOGI",
+  damage: "DAMPAK",
+  prevention: "PENCEGAHAN",
+  control: "PENGENDALIAN",
+  monitoring: "PEMANTAUAN",
+  environment: "PERILAKU & LINGKUNGAN",
+};
 import type { Game, Snapshot, Stack, Tab, ToolId } from "@/game/game";
 
 const TABS: { id: Tab; label: string }[] = [
@@ -222,71 +232,207 @@ function DialogueWindow({ s, game }: { s: Snapshot; game: Game }) {
 function DiagnosisWindow({ s, game }: { s: Snapshot; game: Game }) {
   if (!s.diagnosis) return null;
   const d = s.diagnosis;
+  const canClose = d.stage === "done" || (d.stage === "diagnose" && !!d.revealed && !d.correct);
   return (
-    <Window title="DIAGNOSIS LAPANGAN" onClose={d.revealed ? () => game.closeOverlay() : undefined} wide>
-      <div className="grid grid-cols-[280px_1fr] gap-8">
-        <div className="panel-inset flex flex-col items-center gap-3 p-5">
-          <div className="font-pixel text-[11px] text-gold">CONTOH</div>
-          {d.revealed ? (
-            <PixelIcon make={() => pestSprite(d.revealed as PestId, 0, 8)} size={180} />
-          ) : (
-            <div className="flex h-[180px] w-[180px] items-center justify-center border-4 border-dashed border-wood-dark/60 font-pixel text-4xl text-parchment/40">
-              ?
-            </div>
-          )}
-          <div className="font-body text-xl text-parchment/70">Tanaman: {d.cropName}</div>
-        </div>
-        <div>
-          <div className="font-pixel text-[11px] text-gold">GEJALA YANG TERAMATI</div>
-          <ul className="mt-2 space-y-1">
-            {d.symptoms.map((sym) => (
-              <li key={sym} className="font-body text-2xl text-parchment">
-                • {sym}
-              </li>
-            ))}
-          </ul>
-          <p className="mt-5 font-body text-2xl text-parchment">Hama apa yang menyerang tanaman ini?</p>
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            {d.options.map((o) => (
-              <button
-                key={o}
-                disabled={!!d.revealed}
-                onClick={() => game.answerDiagnosis(o)}
-                className={`panel-inset flex items-center gap-3 p-3 text-left transition-colors ${
-                  d.revealed
-                    ? o === d.revealed
-                      ? "ring-4 ring-leaf"
-                      : "opacity-50"
-                    : "hover:bg-wood/40"
-                }`}
-              >
-                <PixelIcon make={() => pestSprite(o, 0, 3)} size={48} />
-                <span className="font-body text-2xl text-parchment">
-                  {PESTS[o].name}
-                  <span className="block text-lg text-parchment/60">{PESTS[o].nameId}</span>
-                </span>
-              </button>
-            ))}
+    <Window title="DIAGNOSIS LAPANGAN" onClose={canClose ? () => game.closeOverlay() : undefined} wide>
+      {d.stage === "diagnose" && <DiagnosisStage s={s} d={d} game={game} />}
+      {d.stage === "question" && d.question && <QuestionStage d={d} game={game} />}
+      {d.stage === "management" && <ManagementStage d={d} game={game} />}
+      {d.stage === "done" && <DoneStage d={d} game={game} />}
+    </Window>
+  );
+}
+
+function DiagnosisStage({ s, d, game }: { s: Snapshot; d: NonNullable<Snapshot["diagnosis"]>; game: Game }) {
+  return (
+    <div className="grid grid-cols-[280px_1fr] gap-8">
+      <div className="panel-inset flex flex-col items-center gap-3 p-5">
+        <div className="font-pixel text-[11px] text-gold">CONTOH</div>
+        {d.revealed ? (
+          <PixelIcon make={() => pestSprite(d.revealed as PestId, 0, 8)} size={180} />
+        ) : (
+          <div className="flex h-[180px] w-[180px] items-center justify-center border-4 border-dashed border-wood-dark/60 font-pixel text-4xl text-parchment/40">
+            ?
           </div>
-          {d.revealed && (
-            <div
-              className={`panel-inset mt-5 p-4 font-body text-xl leading-snug ${
-                d.correct ? "text-leaf-light" : "text-clay-light"
+        )}
+        <div className="font-body text-xl text-parchment/70">Tanaman: {d.cropName}</div>
+      </div>
+      <div>
+        <div className="font-pixel text-[11px] text-gold">GEJALA YANG TERAMATI</div>
+        <ul className="mt-2 space-y-1">
+          {d.symptoms.map((sym) => (
+            <li key={sym} className="font-body text-2xl text-parchment">
+              • {sym}
+            </li>
+          ))}
+        </ul>
+        <p className="mt-5 font-body text-2xl text-parchment">Hama apa yang menyerang tanaman ini?</p>
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          {d.options.map((o) => (
+            <button
+              key={o}
+              disabled={!!d.revealed}
+              onClick={() => game.answerDiagnosis(o)}
+              className={`panel-inset flex items-center gap-3 p-3 text-left transition-colors ${
+                d.revealed
+                  ? o === d.revealed
+                    ? "ring-4 ring-leaf"
+                    : "opacity-50"
+                  : "hover:bg-wood/40"
               }`}
             >
-              <div className="font-pixel text-[11px]">{d.correct ? "BENAR — +50 KOIN, +10 XP" : "SALAH — −25 KOIN"}</div>
-              <p className="mt-2 text-parchment/90">{d.explain}</p>
-              <p className="mt-2 text-parchment/70">
-                Pengobatan yang disarankan: {PESTICIDES[PESTS[d.revealed].cure].name}. Fakta: {PESTS[d.revealed].fact}
-              </p>
-              <button className="btn-pixel mt-3" onClick={() => game.closeOverlay()}>
-                Kembali ke ladang
+              <PixelIcon make={() => pestSprite(o, 0, 3)} size={48} />
+              <span className="font-body text-2xl text-parchment">
+                {PESTS[o].name}
+                <span className="block text-lg text-parchment/60">{PESTS[o].nameId}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+        {d.revealed && (
+          <div
+            className={`panel-inset mt-5 p-4 font-body text-xl leading-snug ${
+              d.correct ? "text-leaf-light" : "text-clay-light"
+            }`}
+          >
+            <div className="font-pixel text-[11px]">{d.correct ? "BENAR — LANJUT KE PEMBELAJARAN" : "BELUM TEPAT"}</div>
+            <p className="mt-2 text-parchment/90">{d.explain}</p>
+            {d.correct ? (
+              <button className="btn-pixel mt-3" onClick={() => game.advanceToQuestion()}>
+                Lanjutkan
               </button>
-            </div>
+            ) : (
+              <button className="btn-pixel mt-3" onClick={() => game.retryDiagnosis()}>
+                Coba Lagi
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function QuestionStage({ d, game }: { d: NonNullable<Snapshot["diagnosis"]>; game: Game }) {
+  const q = d.question;
+  if (!q) return null;
+  const answered = d.questionAnswered !== null;
+  return (
+    <div>
+      <div className="font-pixel text-[11px] text-gold">{CATEGORY_LABELS[q.category] ?? "PERTANYAAN"}</div>
+      <p className="mt-3 font-body text-2xl text-parchment">{q.text}</p>
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        {q.options.map((opt, i) => (
+          <button
+            key={opt}
+            disabled={answered}
+            onClick={() => game.answerQuestion(i)}
+            className={`panel-inset p-3 text-left font-body text-xl text-parchment transition-colors ${
+              answered
+                ? i === d.questionAnswered
+                  ? d.questionCorrect
+                    ? "ring-4 ring-leaf"
+                    : "ring-4 ring-clay"
+                  : "opacity-50"
+                : "hover:bg-wood/40"
+            }`}
+          >
+            {opt}
+          </button>
+        ))}
+      </div>
+      {answered && (
+        <div
+          className={`panel-inset mt-5 p-4 font-body text-xl leading-snug ${
+            d.questionCorrect ? "text-leaf-light" : "text-clay-light"
+          }`}
+        >
+          <div className="font-pixel text-[11px]">{d.questionCorrect ? "BENAR" : "BELUM TEPAT"}</div>
+          <p className="mt-2 text-parchment/90">{d.questionExplain}</p>
+          {d.questionCorrect ? (
+            <button className="btn-pixel mt-3" onClick={() => game.advanceToManagement()}>
+              Lanjutkan
+            </button>
+          ) : (
+            <button className="btn-pixel mt-3" onClick={() => game.retryQuestion()}>
+              Coba Lagi
+            </button>
           )}
         </div>
+      )}
+    </div>
+  );
+}
+
+function ManagementStage({ d, game }: { d: NonNullable<Snapshot["diagnosis"]>; game: Game }) {
+  const answered = d.managementChoiceIndex !== null;
+  return (
+    <div>
+      <div className="font-pixel text-[11px] text-gold">KEPUTUSAN PENGENDALIAN</div>
+      <p className="mt-3 font-body text-2xl text-parchment">
+        Setelah tahu jenis hamanya, apa langkah pengendalian yang paling tepat?
+      </p>
+      <div className="mt-4 grid grid-cols-1 gap-3">
+        {d.managementOptions.map((opt, i) => (
+          <button
+            key={opt}
+            disabled={answered}
+            onClick={() => game.answerManagement(i)}
+            className={`panel-inset p-3 text-left font-body text-xl text-parchment transition-colors ${
+              answered
+                ? i === d.managementChoiceIndex
+                  ? d.managementCorrect
+                    ? "ring-4 ring-leaf"
+                    : "ring-4 ring-clay"
+                  : "opacity-50"
+                : "hover:bg-wood/40"
+            }`}
+          >
+            {opt}
+          </button>
+        ))}
       </div>
-    </Window>
+      {answered && (
+        <div
+          className={`panel-inset mt-5 p-4 font-body text-xl leading-snug ${
+            d.managementCorrect ? "text-leaf-light" : "text-clay-light"
+          }`}
+        >
+          <div className="font-pixel text-[11px]">{d.managementCorrect ? "TEPAT" : "BELUM TEPAT"}</div>
+          <p className="mt-2 text-parchment/90">{d.managementExplain}</p>
+          {d.managementCorrect ? (
+            <button className="btn-pixel mt-3" onClick={() => game.finishPestLesson()}>
+              Obati Tanaman
+            </button>
+          ) : (
+            <button className="btn-pixel mt-3" onClick={() => game.retryManagement()}>
+              Coba Lagi
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DoneStage({ d, game }: { d: NonNullable<Snapshot["diagnosis"]>; game: Game }) {
+  const pest = d.revealed;
+  return (
+    <div className="flex flex-col items-center gap-4 py-6 text-center">
+      {pest && <PixelIcon make={() => pestSprite(pest, 0, 8)} size={140} />}
+      <div className="font-pixel text-lg text-gold">
+        {pest ? PESTS[pest].name : ""} berhasil diatasi!
+      </div>
+      <p className="font-body text-2xl text-leaf-light">
+        +{d.reward ?? 0} koin, +10 XP — Ensiklopedia diperbarui.
+      </p>
+      {pest && (
+        <p className="max-w-xl font-body text-xl leading-snug text-parchment/80">Fakta: {PESTS[pest].fact}</p>
+      )}
+      <button className="btn-pixel mt-2" onClick={() => game.closeOverlay()}>
+        Kembali ke ladang
+      </button>
+    </div>
   );
 }
 
@@ -316,14 +462,17 @@ function EncyclopediaWindow({ s, game }: { s: Snapshot; game: Game }) {
             Ditemukan {known.size} / {PEST_IDS.length}
           </div>
         </div>
-        <div className="panel-inset p-6">
+        <div className="panel-inset max-h-[560px] overflow-y-auto p-6">
           {unlocked ? (
             <>
               <div className="flex items-start gap-6">
                 <PixelIcon make={() => pestSprite(sel, 0, 8)} size={160} />
                 <div>
                   <h3 className="font-pixel text-lg text-gold">{p.name}</h3>
-                  <p className="font-body text-2xl text-parchment/80">{p.nameId}</p>
+                  <p className="font-body text-2xl text-parchment/80">
+                    {p.nameId} <span className="text-lg text-parchment/50">· {p.kind}</span>
+                  </p>
+                  <p className="font-body text-base italic text-parchment/50">{p.scientificName}</p>
                   <p className="mt-2 font-body text-xl text-parchment">
                     Tanaman inang: {p.hosts.map((h) => `${CROPS[h].name} (${CROPS[h].nameId})`).join(", ")}
                   </p>
@@ -340,12 +489,45 @@ function EncyclopediaWindow({ s, game }: { s: Snapshot; game: Game }) {
               </ul>
               <div className="mt-4 font-pixel text-[11px] text-gold">BIOLOGI</div>
               <p className="font-body text-xl leading-snug text-parchment/90">{p.info}</p>
+              <div className="mt-4 font-pixel text-[11px] text-gold">CARA MENGENALI</div>
+              <ul className="mt-1">
+                {p.recognize.map((x) => (
+                  <li key={x} className="font-body text-xl text-parchment">
+                    • {x}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-4 font-pixel text-[11px] text-gold">BAGIAN YANG DISERANG</div>
+              <p className="font-body text-xl leading-snug text-parchment/90">{p.partsAttacked}</p>
+              <div className="mt-4 font-pixel text-[11px] text-gold">CARA MENYERANG</div>
+              <p className="font-body text-xl leading-snug text-parchment/90">{p.mechanism}</p>
+              <div className="mt-4 font-pixel text-[11px] text-gold">DAMPAK</div>
+              <p className="font-body text-xl leading-snug text-parchment/90">{p.impact}</p>
+              <div className="mt-4 font-pixel text-[11px] text-gold">PENCEGAHAN</div>
+              <ul className="mt-1">
+                {p.prevention.map((x) => (
+                  <li key={x} className="font-body text-xl text-parchment">
+                    • {x}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-4 font-pixel text-[11px] text-gold">PEMANTAUAN</div>
+              <ul className="mt-1">
+                {p.monitoring.map((x) => (
+                  <li key={x} className="font-body text-xl text-parchment">
+                    • {x}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-4 font-pixel text-[11px] text-gold">PENGENDALIAN</div>
+              <p className="font-body text-xl leading-snug text-parchment/90">{p.control}</p>
               <div className="mt-4 font-pixel text-[11px] text-gold">FAKTA MENARIK</div>
               <p className="font-body text-xl leading-snug text-parchment/90">{p.fact}</p>
             </>
           ) : (
             <p className="desktop-key-hint font-body text-2xl text-parchment/60">
-              Anda belum mendiagnosis hama ini. Periksa tanaman sakit di ladang dengan E untuk mencatatnya di sini.
+              Anda belum mempelajari tuntas hama ini. Periksa tanaman sakit di ladang dengan E, jawab diagnosis dan
+              pertanyaannya dengan benar untuk mencatatnya di sini.
             </p>
           )}
         </div>
